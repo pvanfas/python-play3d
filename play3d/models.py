@@ -39,7 +39,7 @@ class Model:
         :param path: file path or download url
         :param rasterize: True - means turn off rasterization - use only mesh (Default value = False)
         :param kwargs: return:
-        :param **kwargs: 
+        :param **kwargs:
 
         """
         data = []
@@ -158,7 +158,7 @@ class Model:
     def _project_points(self, points):
         """
 
-        :param points: 
+        :param points:
 
         """
         points = numpy.delete(
@@ -171,7 +171,7 @@ class Model:
     def rotate(self, angle_x, angle_y=0, angle_z=0):
         """
 
-        :param angle_x: 
+        :param angle_x:
         :param angle_y:  (Default value = 0)
         :param angle_z:  (Default value = 0)
 
@@ -186,9 +186,9 @@ class Model:
     def set_position(self, x, y, z, w=1):
         """
 
-        :param x: 
-        :param y: 
-        :param z: 
+        :param x:
+        :param y:
+        :param z:
         :param w:  (Default value = 1)
 
         """
@@ -197,7 +197,7 @@ class Model:
     def route(self, trajectory: "Trajectory", enable_trace=False):
         """
 
-        :param trajectory: "Trajectory": 
+        :param trajectory: "Trajectory":
         :param enable_trace:  (Default value = False)
 
         """
@@ -289,7 +289,7 @@ class Model:
     def _render_mesh(self, points):
         """
 
-        :param points: 
+        :param points:
 
         """
         A = points
@@ -523,8 +523,8 @@ class Sphere(Plot):
     def _fn(cls, phi, theta):
         """
 
-        :param phi: 
-        :param theta: 
+        :param phi:
+        :param theta:
 
         """
         return [
@@ -566,7 +566,7 @@ class Trajectory:
             """
 
             :param speed:  (Default value = 0.01)
-            :param **kwargs: 
+            :param **kwargs:
 
             """
             return Trajectory(func=lambda x: [x, y, 0], speed=speed, **kwargs)
@@ -576,7 +576,7 @@ class Trajectory:
             """
 
             :param speed:  (Default value = 0.01)
-            :param **kwargs: 
+            :param **kwargs:
 
             """
             return Trajectory(func=lambda y: [0, y, 0], speed=speed, **kwargs)
@@ -586,7 +586,7 @@ class Trajectory:
             """
 
             :param speed:  (Default value = 0.01)
-            :param **kwargs: 
+            :param **kwargs:
 
             """
             return Trajectory(func=lambda z: [0, 0, z], speed=speed, **kwargs)
@@ -595,10 +595,10 @@ class Trajectory:
     def Around(cls, around: Model, func, speed=0.01, **kwargs):
         """
 
-        :param around: Model: 
-        :param func: 
+        :param around: Model:
+        :param func:
         :param speed:  (Default value = 0.01)
-        :param **kwargs: 
+        :param **kwargs:
 
         """
         return Trajectory(around=around, func=func, speed=speed, **kwargs)
@@ -608,7 +608,7 @@ class Trajectory:
         """
 
         :param speed:  (Default value = 0.01)
-        :param **kwargs: 
+        :param **kwargs:
 
         """
         return Trajectory(lambda x: [x, math.sin(x)], speed=speed, **kwargs)
@@ -618,7 +618,7 @@ class Trajectory:
         """
 
         :param speed:  (Default value = 0.01)
-        :param **kwargs: 
+        :param **kwargs:
 
         """
         return Trajectory(lambda x: [x, math.cos(x)], speed=speed, **kwargs)
@@ -628,7 +628,7 @@ class Trajectory:
         """
 
         :param speed:  (Default value = 0.01)
-        :param **kwargs: 
+        :param **kwargs:
 
         """
         return Trajectory(lambda x: [x, math.sin(x), -x], speed=speed, **kwargs)
@@ -638,7 +638,7 @@ class Trajectory:
         """
 
         :param speed:  (Default value = 0.01)
-        :param **kwargs: 
+        :param **kwargs:
 
         """
         return Trajectory(lambda x: [x, math.cos(x), -x], speed=speed, **kwargs)
@@ -728,7 +728,7 @@ class Trajectory:
     def attach(self, model):
         """
 
-        :param model: 
+        :param model:
 
         """
         self.attached_model = model
