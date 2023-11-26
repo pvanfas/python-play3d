@@ -27,6 +27,7 @@ black, white, blue = (20, 20, 20), (230, 230, 230), (0, 154, 255)
 
 
 class Model:
+    """ """
     renderer = None
     data = []
     faces = []
@@ -36,9 +37,10 @@ class Model:
         """
 
         :param path: file path or download url
-        :param rasterize: True - means turn off rasterization - use only mesh
-        :param kwargs:
-        :return:
+        :param rasterize: True - means turn off rasterization - use only mesh (Default value = False)
+        :param kwargs: return:
+        :param **kwargs: 
+
         """
         data = []
         faces = []
@@ -128,8 +130,8 @@ class Model:
     def _perspective_divide(self, points):
         """
 
-        :param points:
-        :return:
+        :param points: return:
+
         """
         # [x, y, z, w=1]
         A = points.matrix  # np.array
@@ -154,6 +156,11 @@ class Model:
         return A.astype(int)
 
     def _project_points(self, points):
+        """
+
+        :param points: 
+
+        """
         points = numpy.delete(
             points, numpy.where(points[:, 3] < three_d.Camera.near)[0], 0
         )
@@ -162,16 +169,38 @@ class Model:
             three_d.Device.put_pixel(pos[x], pos[y], self.color)
 
     def rotate(self, angle_x, angle_y=0, angle_z=0):
+        """
+
+        :param angle_x: 
+        :param angle_y:  (Default value = 0)
+        :param angle_z:  (Default value = 0)
+
+        """
         self.matrix = three_d.rotate_model(self.matrix, angle_x, angle_y, angle_z)
         return self
 
     def position(self):
+        """ """
         return self.matrix.matrix[3]  # [x y z w]
 
     def set_position(self, x, y, z, w=1):
+        """
+
+        :param x: 
+        :param y: 
+        :param z: 
+        :param w:  (Default value = 1)
+
+        """
         self.matrix.matrix[3] = [x, y, z, w]  # [x y z w]
 
     def route(self, trajectory: "Trajectory", enable_trace=False):
+        """
+
+        :param trajectory: "Trajectory": 
+        :param enable_trace:  (Default value = False)
+
+        """
         self.trajectory = trajectory
         if trajectory.attached_model:
             # we need to reset self.position to attached model position
@@ -180,14 +209,19 @@ class Model:
         enable_trace and self.enable_trace()
 
     def enable_trace(self, length=None):
+        """
+
+        :param length:  (Default value = None)
+
+        """
         self.trajectory_path = Model(data=numpy.ndarray([1, 4], "float32"), color=blue)
         self.trace = True
 
     def _trace(self, length=None):
-        """
-        Used for dot-based visual tracing of model movements
+        """Used for dot-based visual tracing of model movements
+
         :param length: int Maximum length of track trajectory chain, by default without any limits
-        :return:
+
         """
 
         new_track_point = self.position()
@@ -197,6 +231,7 @@ class Model:
         self.trajectory_path.draw()
 
     def _shimmer(self):
+        """ """
         red, green, blue = self.color
         rs, gs, bs = self.rs, self.gs, self.bs
 
@@ -212,11 +247,11 @@ class Model:
         self.color = (red + self.rs), (green + self.gs), (blue + self.bs)
 
     def _clip_lines(self, points):
-        """
-        Not finished.
+        """Not finished.
         Clip mesh lines must be before viewport transformation and perspective divide
-        :param points:
-        :return:
+
+        :param points: return:
+
         """
         points_copy = copy.deepcopy(points)
         for face in self.faces:
@@ -252,6 +287,11 @@ class Model:
         return points
 
     def _render_mesh(self, points):
+        """
+
+        :param points: 
+
+        """
         A = points
         for i, face in enumerate(self.faces):
             color = 140 + (i % 110)
@@ -281,6 +321,7 @@ class Model:
             raise Exception("you can multiplicate only to matrix.Matrix")
 
     def draw(self):
+        """ """
         # if not self.__class__.renderer:
         #     raise Exception('You have to set projection renderer for Model')
         if len(self.data) > 0:
@@ -311,6 +352,7 @@ class Model:
 
 
 class Grid(Model):
+    """ """
     def __init__(self, dot_precision=100, dimensions=(10, 10), **kwargs):
         super(Grid, self).__init__(**kwargs)
 
@@ -343,10 +385,12 @@ class Grid(Model):
         )
 
     def render(self):
+        """ """
         pass
 
 
 class Cube(Model):
+    """ """
     data = Matrix(
         [
             [-1, 1, 1, 1],
@@ -382,6 +426,7 @@ class Cube(Model):
 
 
 class CircleChain(Model):
+    """ """
     def __init__(self, **kwargs):
         super(CircleChain, self).__init__(**kwargs)
 
@@ -410,11 +455,12 @@ class CircleChain(Model):
 
 
 class Plot(Model):
-    """
-    Plotting model for visualization with parametric(polar) equations
+    """Plotting model for visualization with parametric(polar) equations
     Ex. func=lambda t: [t, t*t] <-> y=x*x
     sine = Plot(position=(4, 2, -8), color=(0, 64, 255),
             func=lambda x, t: [x, math.cos(x) * math.cos(t), math.cos(t)], allrange=[0, 2*math.pi], interpolate=75)
+
+
     """
 
     def __init__(self, func, allrange=(-1, 1), interpolate=100, **kwargs):
@@ -472,8 +518,15 @@ class Plot(Model):
 
 
 class Sphere(Plot):
+    """ """
     @classmethod
     def _fn(cls, phi, theta):
+        """
+
+        :param phi: 
+        :param theta: 
+
+        """
         return [
             math.sin(phi * math.pi / 180) * math.cos(theta * math.pi / 180),
             math.sin(theta * math.pi / 180) * math.sin(phi * math.pi / 180),
@@ -505,37 +558,89 @@ class Sphere(Plot):
 
 
 class Trajectory:
+    """ """
     class ToAxis:
+        """ """
         @classmethod
         def X(cls, speed=0.01, **kwargs):
+            """
+
+            :param speed:  (Default value = 0.01)
+            :param **kwargs: 
+
+            """
             return Trajectory(func=lambda x: [x, y, 0], speed=speed, **kwargs)
 
         @classmethod
         def Y(cls, speed=0.01, **kwargs):
+            """
+
+            :param speed:  (Default value = 0.01)
+            :param **kwargs: 
+
+            """
             return Trajectory(func=lambda y: [0, y, 0], speed=speed, **kwargs)
 
         @classmethod
         def Z(cls, speed=0.01, **kwargs):
+            """
+
+            :param speed:  (Default value = 0.01)
+            :param **kwargs: 
+
+            """
             return Trajectory(func=lambda z: [0, 0, z], speed=speed, **kwargs)
 
     @classmethod
     def Around(cls, around: Model, func, speed=0.01, **kwargs):
+        """
+
+        :param around: Model: 
+        :param func: 
+        :param speed:  (Default value = 0.01)
+        :param **kwargs: 
+
+        """
         return Trajectory(around=around, func=func, speed=speed, **kwargs)
 
     @classmethod
     def SineXY(cls, speed=0.01, **kwargs):
+        """
+
+        :param speed:  (Default value = 0.01)
+        :param **kwargs: 
+
+        """
         return Trajectory(lambda x: [x, math.sin(x)], speed=speed, **kwargs)
 
     @classmethod
     def CosXY(cls, speed=0.01, **kwargs):
+        """
+
+        :param speed:  (Default value = 0.01)
+        :param **kwargs: 
+
+        """
         return Trajectory(lambda x: [x, math.cos(x)], speed=speed, **kwargs)
 
     @classmethod
     def SineXYZ(cls, speed=0.01, **kwargs):
+        """
+
+        :param speed:  (Default value = 0.01)
+        :param **kwargs: 
+
+        """
         return Trajectory(lambda x: [x, math.sin(x), -x], speed=speed, **kwargs)
 
     @classmethod
     def CosXYZ(cls, speed=0.01, **kwargs):
+        """
+
+        :param speed:  (Default value = 0.01)
+        :param **kwargs: 
+
+        """
         return Trajectory(lambda x: [x, math.cos(x), -x], speed=speed, **kwargs)
 
     def __init__(self, func, speed=0.2, around: Model = None, start_position=(0, 0, 0)):
@@ -573,6 +678,7 @@ class Trajectory:
             self.position = self.next_value()
 
     def next_value(self):
+        """ """
         result = self.func(self.x)
 
         if isinstance(result, (list, Iterable)):
@@ -596,6 +702,7 @@ class Trajectory:
         return point
 
     def move(self):
+        """ """
         point = self.next_value()
         # in dPosition w goes to zero, no affect for dx dy dz
         self.dPosition = point - self.position
@@ -619,9 +726,15 @@ class Trajectory:
         return self.move()
 
     def attach(self, model):
+        """
+
+        :param model: 
+
+        """
         self.attached_model = model
         self.start_position = model.position()[:-1]
 
     def backwards(self):
+        """ """
         self.speed = -self.speed
         return self
