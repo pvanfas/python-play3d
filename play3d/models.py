@@ -57,7 +57,8 @@ class Model:
                 data.append(v)
 
             if l.startswith('f '):
-                v = list(map(lambda face: int(face.split('/')[0]), l[2:].split()))
+                v = list(map(lambda face: int(
+                    face.split('/')[0]), l[2:].split()))
 
                 faces.append(v)
 
@@ -82,7 +83,8 @@ class Model:
             [*position, 1]
         ])
         self.faces = self.__class__.faces
-        self.data = Matrix(self.__class__.data.matrix.copy()) if self.__class__.data else None
+        self.data = Matrix(self.__class__.data.matrix.copy()
+                           ) if self.__class__.data else None
 
         # defines continuous translation/route by given trajectory function
         self.trajectory = None
@@ -152,7 +154,8 @@ class Model:
             three_d.Device.put_pixel(pos[x], pos[y], self.color)
 
     def rotate(self, angle_x, angle_y=0, angle_z=0):
-        self.matrix = three_d.rotate_model(self.matrix, angle_x, angle_y, angle_z)
+        self.matrix = three_d.rotate_model(
+            self.matrix, angle_x, angle_y, angle_z)
         return self
 
     def position(self):
@@ -172,7 +175,8 @@ class Model:
         enable_trace and self.enable_trace()
 
     def enable_trace(self, length=None):
-        self.trajectory_path = Model(data=numpy.ndarray([1, 4], 'float32'), color=blue)
+        self.trajectory_path = Model(
+            data=numpy.ndarray([1, 4], 'float32'), color=blue)
         self.trace = True
 
     def _trace(self, length=None):
@@ -183,7 +187,8 @@ class Model:
         """
 
         new_track_point = self.position()
-        self.trajectory_path.data.matrix = numpy.vstack([self.trajectory_path.data, new_track_point])
+        self.trajectory_path.data.matrix = numpy.vstack(
+            [self.trajectory_path.data, new_track_point])
         self.trajectory_path.draw()
 
     def _shimmer(self):
@@ -220,7 +225,8 @@ class Model:
                 if points[start][w] < three_d.Camera.near or points[end][w] < three_d.Camera.near:
 
                     # direction > 0 means first point of line is ahead of us. so we cut from second point
-                    pc, direction = three_d.linemidpoint(points[start], points[end], three_d.Camera.near)
+                    pc, direction = three_d.linemidpoint(
+                        points[start], points[end], three_d.Camera.near)
                     # points[end if points[end][w] < Camera.near else start] = pc
                     # fixme: proper midline separation
                     points_copy[end] = pc
@@ -237,14 +243,15 @@ class Model:
             color = 140 + (i % 110)
 
             if self.rasterize:
-                three_d.fill_triangle(A[face[0]], A[face[1]], A[face[2]], (color, color, color))
+                three_d.fill_triangle(
+                    A[face[0]], A[face[1]], A[face[2]], (color, color, color))
             else:
                 for i in range(3):
                     start, end = face[i], face[(i + 1) % 3]
 
-                    if not(A[start][w] <= three_d.Camera.near and A[end][w] <= three_d.Camera.near):#\
-                    # and 0 < A[start][x] < three_d.Device._width and 0 < A[start][y] < three_d.Device._height\
-                    # and 0 < A[end][x] < three_d.Device._width and 0 < A[end][y] < three_d.Device._height:
+                    if not (A[start][w] <= three_d.Camera.near and A[end][w] <= three_d.Camera.near):  # \
+                        # and 0 < A[start][x] < three_d.Device._width and 0 < A[start][y] < three_d.Device._height\
+                        # and 0 < A[end][x] < three_d.Device._width and 0 < A[end][y] < three_d.Device._height:
 
                         three_d.Device.drawline(A[start], A[end], self.color)
 
@@ -309,16 +316,19 @@ class Grid(Model):
                 (x, 0, 0, 1), (x, 0, grid_dimension[1], 1), precision=dot_precision
             )
 
-            self.data.matrix = numpy.array(list(self.data.matrix) + list(line_dots))
+            self.data.matrix = numpy.array(
+                list(self.data.matrix) + list(line_dots))
 
         for z in range(grid_dimension[1]):
             line_dots = three_d.dotted_line(
                 (0, 0, z, 1), (grid_dimension[0], 0, z, 1), precision=dot_precision
             )
-            self.data.matrix = numpy.array(list(self.data.matrix) + list(line_dots))
+            self.data.matrix = numpy.array(
+                list(self.data.matrix) + list(line_dots))
         # self.data = grid_vertices
 
-        self.matrix = self.matrix @ three_d.translate(-grid_dimension[0] / 2, 0, -grid_dimension[1] / 2)
+        self.matrix = self.matrix @ three_d.translate(
+            -grid_dimension[0] / 2, 0, -grid_dimension[1] / 2)
 
     def render(self):
         pass
@@ -368,8 +378,10 @@ class CircleChain(Model):
         full_cycle = 360
         for degree in range(full_cycle):
 
-            self.data.append([math.sin(degree * 2 * math.pi/360), math.cos(degree * 2 * math.pi/360), 0, 1])
-            self.data.append([0, math.sin(degree * 2 * math.pi / 360), math.cos(degree * 2 * math.pi / 360), 1])
+            self.data.append([math.sin(degree * 2 * math.pi/360),
+                             math.cos(degree * 2 * math.pi/360), 0, 1])
+            self.data.append([0, math.sin(degree * 2 * math.pi / 360),
+                             math.cos(degree * 2 * math.pi / 360), 1])
 
         self.data = Matrix(self.data)
 
@@ -381,6 +393,7 @@ class Plot(Model):
     sine = Plot(position=(4, 2, -8), color=(0, 64, 255),
             func=lambda x, t: [x, math.cos(x) * math.cos(t), math.cos(t)], allrange=[0, 2*math.pi], interpolate=75)
     """
+
     def __init__(self, func, allrange=(-1, 1), interpolate=100, **kwargs):
         """
 
@@ -403,7 +416,8 @@ class Plot(Model):
 
         discrete_axis = np.linspace(allrange[0], allrange[1], interpolate)
 
-        mesh = np.meshgrid(*[discrete_axis]*fn_ndim)  # create N dimensional input grid
+        # create N dimensional input grid
+        mesh = np.meshgrid(*[discrete_axis]*fn_ndim)
         #
         params = []
         for i in range(fn_ndim):
@@ -418,13 +432,15 @@ class Plot(Model):
                 # todo replace to basic check without numpy
                 arr = numpy.array(res)
                 if arr.ndim != 1 or arr.shape[0] > 3:
-                    raise Exception(f'Plot function {func.__name__} codomain should be 1D < 3 array of numbers (or plain number), given: {res}')
+                    raise Exception(
+                        f'Plot function {func.__name__} codomain should be 1D < 3 array of numbers (or plain number), given: {res}')
                 arr.resize(4, refcheck=False)
                 point = arr + base_point
             elif isinstance(res, numbers.Number):
                 point = [points[i], res, 0, 1]
             else:
-                raise Exception(f'Plot function {func.__name__} codomain should be 1D < 3 array of numbers (or plain number), given: {res}')
+                raise Exception(
+                    f'Plot function {func.__name__} codomain should be 1D < 3 array of numbers (or plain number), given: {res}')
             self.data.append(point)
 
         self.data = Matrix(self.data)
@@ -498,7 +514,8 @@ class Trajectory:
         self.speed = speed
         self.x = 0
         self.attached_model = around
-        self.start_position = self.attached_model.position()[:-1] if self.attached_model else start_position
+        self.start_position = self.attached_model.position(
+        )[:-1] if self.attached_model else start_position
         self.position = [0, 0, 0, 1]
         # dx dy dz
         self.dPosition = None
@@ -507,7 +524,8 @@ class Trajectory:
         self.signature = signature(func)
 
         if len(self.signature.parameters) != 1:
-            raise Exception('Continuous Trajectory function can have only one parameter')
+            raise Exception(
+                'Continuous Trajectory function can have only one parameter')
 
         # if we attached - we want to preserve function center context,
         # so first calibration jump is required to assume that 0.0.0 is the object center
