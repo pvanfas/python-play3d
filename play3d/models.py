@@ -2,6 +2,7 @@ import copy
 import math
 import numbers
 import urllib.request
+import sys
 if sys.version_info >= (3, 10):
     from collections.abc import Iterable
 else:
