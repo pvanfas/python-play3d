@@ -2,10 +2,12 @@ import copy
 import math
 import numbers
 import urllib.request
+
 if sys.version_info >= (3, 10):
     from collections.abc import Iterable
 else:
     from collections import Iterable
+
 from inspect import signature
 
 import numpy
@@ -13,7 +15,6 @@ import numpy as np
 
 from . import three_d
 from .matrix import Matrix
-
 
 x = 0
 y = 1
@@ -26,7 +27,7 @@ black, white, blue = (20, 20, 20), (230, 230, 230), (0, 154, 255)
 
 
 class Model:
-
+    """ """
     renderer = None
     data = []
     faces = []
@@ -36,35 +37,45 @@ class Model:
         """
 
         :param path: file path or download url
-        :param rasterize: True - means turn off rasterization - use only mesh
-        :param kwargs:
-        :return:
+        :param rasterize: True - means turn off rasterization - use only mesh (Default value = False)
+        :param kwargs: return:
+        :param **kwargs:
+
         """
         data = []
         faces = []
 
-        if 'http' in path:
-            content = urllib.request.urlopen(path).read().decode('utf-8')
+        if "http" in path:
+            content = urllib.request.urlopen(path).read().decode("utf-8")
         else:
             content = open(path).read()
         for l in content.splitlines():
-
-            if l.startswith('v '):
+            if l.startswith("v "):
                 v = [float(n) for n in l[2:].split()]
                 if len(v) == 3:  # add default w=1 coord if not given
                     v += [1]
 
                 data.append(v)
 
-            if l.startswith('f '):
-                v = list(map(lambda face: int(face.split('/')[0]), l[2:].split()))
+            if l.startswith("f "):
+                v = list(
+                    map(lambda face: int(face.split("/")[0]), l[2:].split()))
 
                 faces.append(v)
 
         obj = cls(**kwargs, data=data, faces=faces, rasterize=rasterize)
         return obj
 
-    def __init__(self, position=(0, 0, 0), scale=1, color=white, shimmering=False, data=None, faces=None, **kwargs):
+    def __init__(
+        self,
+        position=(0, 0, 0),
+        scale=1,
+        color=white,
+        shimmering=False,
+        data=None,
+        faces=None,
+        **kwargs,
+    ):
         """
 
         :param position:
@@ -79,10 +90,11 @@ class Model:
             [1 * scale, 0, 0, 0],
             [0, 1 * scale, 0, 0],
             [0, 0, 1 * scale, 0],
-            [*position, 1]
+            [*position, 1],
         ])
         self.faces = self.__class__.faces
-        self.data = Matrix(self.__class__.data.matrix.copy()) if self.__class__.data else None
+        self.data = (Matrix(self.__class__.data.matrix.copy())
+                     if self.__class__.data else None)
 
         # defines continuous translation/route by given trajectory function
         self.trajectory = None
@@ -95,13 +107,13 @@ class Model:
             if faces:
                 self.faces = faces
         elif not self.data:
-            self.data = Matrix(numpy.ndarray([1, 4], 'float32'))
+            self.data = Matrix(numpy.ndarray([1, 4], "float32"))
         self.shimmering = shimmering
         self.color = color
         speed = 10
 
         if self.faces:
-            self.rasterize = kwargs.pop('rasterize', False)
+            self.rasterize = kwargs.pop("rasterize", False)
         # color shimmering speed
         self.rs, self.gs, self.bs = speed, -speed, speed
 
@@ -111,14 +123,13 @@ class Model:
         self.trace = False
 
         for k, v in kwargs.items():
-
             setattr(self, k, v)
 
     def _perspective_divide(self, points):
         """
 
-        :param points:
-        :return:
+        :param points: return:
+
         """
         # [x, y, z, w=1]
         A = points.matrix  # np.array
@@ -143,27 +154,52 @@ class Model:
         return A.astype(int)
 
     def _project_points(self, points):
+        """
 
+        :param points:
+
+        """
         points = numpy.delete(
-            points, numpy.where(points[:, 3] < three_d.Camera.near)[0], 0
-        )
+            points,
+            numpy.where(points[:, 3] < three_d.Camera.near)[0], 0)
 
         for pos in points:
             three_d.Device.put_pixel(pos[x], pos[y], self.color)
 
     def rotate(self, angle_x, angle_y=0, angle_z=0):
-        self.matrix = three_d.rotate_model(self.matrix, angle_x, angle_y, angle_z)
+        """
+
+        :param angle_x:
+        :param angle_y:  (Default value = 0)
+        :param angle_z:  (Default value = 0)
+
+        """
+        self.matrix = three_d.rotate_model(self.matrix, angle_x, angle_y,
+                                           angle_z)
         return self
 
     def position(self):
-
+        """ """
         return self.matrix.matrix[3]  # [x y z w]
 
     def set_position(self, x, y, z, w=1):
+        """
 
+        :param x:
+        :param y:
+        :param z:
+        :param w:  (Default value = 1)
+
+        """
         self.matrix.matrix[3] = [x, y, z, w]  # [x y z w]
 
-    def route(self, trajectory: 'Trajectory', enable_trace=False):
+    def route(self, trajectory: "Trajectory", enable_trace=False):
+        """
+
+        :param trajectory: "Trajectory":
+        :param enable_trace:  (Default value = False)
+
+        """
         self.trajectory = trajectory
         if trajectory.attached_model:
             # we need to reset self.position to attached model position
@@ -172,21 +208,29 @@ class Model:
         enable_trace and self.enable_trace()
 
     def enable_trace(self, length=None):
-        self.trajectory_path = Model(data=numpy.ndarray([1, 4], 'float32'), color=blue)
+        """
+
+        :param length:  (Default value = None)
+
+        """
+        self.trajectory_path = Model(data=numpy.ndarray([1, 4], "float32"),
+                                     color=blue)
         self.trace = True
 
     def _trace(self, length=None):
-        """
-        Used for dot-based visual tracing of model movements
+        """Used for dot-based visual tracing of model movements
+
         :param length: int Maximum length of track trajectory chain, by default without any limits
-        :return:
+
         """
 
         new_track_point = self.position()
-        self.trajectory_path.data.matrix = numpy.vstack([self.trajectory_path.data, new_track_point])
+        self.trajectory_path.data.matrix = numpy.vstack(
+            [self.trajectory_path.data, new_track_point])
         self.trajectory_path.draw()
 
     def _shimmer(self):
+        """ """
         red, green, blue = self.color
         rs, gs, bs = self.rs, self.gs, self.bs
 
@@ -202,29 +246,32 @@ class Model:
         self.color = (red + self.rs), (green + self.gs), (blue + self.bs)
 
     def _clip_lines(self, points):
-        """
-        Not finished.
+        """Not finished.
         Clip mesh lines must be before viewport transformation and perspective divide
-        :param points:
-        :return:
+
+        :param points: return:
+
         """
         points_copy = copy.deepcopy(points)
         for face in self.faces:
-
             for i in range(3):
                 start, end = face[i], face[(i + 1) % 3]
                 # todo camera near numpy before
-                if points[start][w] <= three_d.Camera.near and points[end][w] <= three_d.Camera.near:
+                if (points[start][w] <= three_d.Camera.near
+                        and points[end][w] <= three_d.Camera.near):
                     continue
 
-                if points[start][w] < three_d.Camera.near or points[end][w] < three_d.Camera.near:
-
+                if (points[start][w] < three_d.Camera.near
+                        or points[end][w] < three_d.Camera.near):
                     # direction > 0 means first point of line is ahead of us. so we cut from second point
-                    pc, direction = three_d.linemidpoint(points[start], points[end], three_d.Camera.near)
+                    pc, direction = three_d.linemidpoint(
+                        points[start], points[end], three_d.Camera.near)
                     # points[end if points[end][w] < Camera.near else start] = pc
                     # fixme: proper midline separation
                     points_copy[end] = pc
-                    points_copy[start] = points[start] if points[start][w] > three_d.Camera.near else points[end]
+                    points_copy[start] = (points[start] if points[start][w]
+                                          > three_d.Camera.near else
+                                          points[end])
                     # three_d.Device.drawline(points[start] if points[start][w] > Camera.near else points[end], pc, self.color)
                 # else:
                 three_d.Device.drawline(points[start], points[end], self.color)
@@ -232,19 +279,26 @@ class Model:
         return points
 
     def _render_mesh(self, points):
+        """
+
+        :param points:
+
+        """
         A = points
         for i, face in enumerate(self.faces):
             color = 140 + (i % 110)
 
             if self.rasterize:
-                three_d.fill_triangle(A[face[0]], A[face[1]], A[face[2]], (color, color, color))
+                three_d.fill_triangle(A[face[0]], A[face[1]], A[face[2]],
+                                      (color, color, color))
             else:
                 for i in range(3):
                     start, end = face[i], face[(i + 1) % 3]
 
-                    if not(A[start][w] <= three_d.Camera.near and A[end][w] <= three_d.Camera.near):#\
-                    # and 0 < A[start][x] < three_d.Device._width and 0 < A[start][y] < three_d.Device._height\
-                    # and 0 < A[end][x] < three_d.Device._width and 0 < A[end][y] < three_d.Device._height:
+                    if not (A[start][w] <= three_d.Camera.near
+                            and A[end][w] <= three_d.Camera.near):  # \
+                        # and 0 < A[start][x] < three_d.Device._width and 0 < A[start][y] < three_d.Device._height\
+                        # and 0 < A[end][x] < three_d.Device._width and 0 < A[end][y] < three_d.Device._height:
 
                         three_d.Device.drawline(A[start], A[end], self.color)
 
@@ -253,15 +307,14 @@ class Model:
             self.matrix = self.matrix @ other
 
         else:
-            raise Exception('you can multiplicate only to matrix.Matrix')
+            raise Exception("you can multiplicate only to matrix.Matrix")
 
     def draw(self):
-
+        """ """
         # if not self.__class__.renderer:
         #     raise Exception('You have to set projection renderer for Model')
         if len(self.data) > 0:
             if self.shimmering:
-
                 self._shimmer()
 
             VP = three_d.Camera.View_Projection_matrix()
@@ -288,9 +341,9 @@ class Model:
 
 
 class Grid(Model):
+    """ """
 
     def __init__(self, dot_precision=100, dimensions=(10, 10), **kwargs):
-
         super(Grid, self).__init__(**kwargs)
 
         grid_dimension = dimensions  # x and z
@@ -304,27 +357,31 @@ class Grid(Model):
         # ])
         self.data = Matrix([])
         for x in range(grid_dimension[0]):
+            line_dots = three_d.dotted_line((x, 0, 0, 1),
+                                            (x, 0, grid_dimension[1], 1),
+                                            precision=dot_precision)
 
-            line_dots = three_d.dotted_line(
-                (x, 0, 0, 1), (x, 0, grid_dimension[1], 1), precision=dot_precision
-            )
-
-            self.data.matrix = numpy.array(list(self.data.matrix) + list(line_dots))
+            self.data.matrix = numpy.array(
+                list(self.data.matrix) + list(line_dots))
 
         for z in range(grid_dimension[1]):
-            line_dots = three_d.dotted_line(
-                (0, 0, z, 1), (grid_dimension[0], 0, z, 1), precision=dot_precision
-            )
-            self.data.matrix = numpy.array(list(self.data.matrix) + list(line_dots))
+            line_dots = three_d.dotted_line((0, 0, z, 1),
+                                            (grid_dimension[0], 0, z, 1),
+                                            precision=dot_precision)
+            self.data.matrix = numpy.array(
+                list(self.data.matrix) + list(line_dots))
         # self.data = grid_vertices
 
-        self.matrix = self.matrix @ three_d.translate(-grid_dimension[0] / 2, 0, -grid_dimension[1] / 2)
+        self.matrix = self.matrix @ three_d.translate(
+            -grid_dimension[0] / 2, 0, -grid_dimension[1] / 2)
 
     def render(self):
+        """ """
         pass
 
 
 class Cube(Model):
+    """ """
     data = Matrix([
         [-1, 1, 1, 1],
         [1, 1, 1, 1],
@@ -333,7 +390,7 @@ class Cube(Model):
         [-1, 1, -1, 1],
         [1, 1, -1, 1],
         [1, -1, -1, 1],
-        [-1, -1, -1, 1]
+        [-1, -1, -1, 1],
     ])
 
     # ! respect to order above
@@ -344,14 +401,14 @@ class Cube(Model):
         [1, 5, 6],
         [0, 1, 4],
         [1, 4, 5],
-
         [2, 3, 7],
         [3, 6, 7],
         [0, 2, 7],
         [0, 4, 7],
         [4, 5, 6],
-        [4, 6, 7]
+        [4, 6, 7],
     ]
+
     #
 
     def __init__(self, **kwargs):
@@ -359,6 +416,7 @@ class Cube(Model):
 
 
 class CircleChain(Model):
+    """ """
 
     def __init__(self, **kwargs):
         super(CircleChain, self).__init__(**kwargs)
@@ -367,20 +425,31 @@ class CircleChain(Model):
 
         full_cycle = 360
         for degree in range(full_cycle):
-
-            self.data.append([math.sin(degree * 2 * math.pi/360), math.cos(degree * 2 * math.pi/360), 0, 1])
-            self.data.append([0, math.sin(degree * 2 * math.pi / 360), math.cos(degree * 2 * math.pi / 360), 1])
+            self.data.append([
+                math.sin(degree * 2 * math.pi / 360),
+                math.cos(degree * 2 * math.pi / 360),
+                0,
+                1,
+            ])
+            self.data.append([
+                0,
+                math.sin(degree * 2 * math.pi / 360),
+                math.cos(degree * 2 * math.pi / 360),
+                1,
+            ])
 
         self.data = Matrix(self.data)
 
 
 class Plot(Model):
-    """
-    Plotting model for visualization with parametric(polar) equations
+    """Plotting model for visualization with parametric(polar) equations
     Ex. func=lambda t: [t, t*t] <-> y=x*x
     sine = Plot(position=(4, 2, -8), color=(0, 64, 255),
             func=lambda x, t: [x, math.cos(x) * math.cos(t), math.cos(t)], allrange=[0, 2*math.pi], interpolate=75)
+
+
     """
+
     def __init__(self, func, allrange=(-1, 1), interpolate=100, **kwargs):
         """
 
@@ -393,7 +462,7 @@ class Plot(Model):
         super(Plot, self).__init__(**kwargs)
 
         if not callable(func):
-            raise Exception(f'func argument should be callable, given: {func}')
+            raise Exception(f"func argument should be callable, given: {func}")
 
         sig = signature(func)
         self.signature = sig
@@ -403,7 +472,8 @@ class Plot(Model):
 
         discrete_axis = np.linspace(allrange[0], allrange[1], interpolate)
 
-        mesh = np.meshgrid(*[discrete_axis]*fn_ndim)  # create N dimensional input grid
+        # create N dimensional input grid
+        mesh = np.meshgrid(*[discrete_axis] * fn_ndim)
         #
         params = []
         for i in range(fn_ndim):
@@ -418,87 +488,170 @@ class Plot(Model):
                 # todo replace to basic check without numpy
                 arr = numpy.array(res)
                 if arr.ndim != 1 or arr.shape[0] > 3:
-                    raise Exception(f'Plot function {func.__name__} codomain should be 1D < 3 array of numbers (or plain number), given: {res}')
+                    raise Exception(
+                        f"Plot function {func.__name__} codomain should be 1D < 3 array of numbers (or plain number), given: {res}"
+                    )
                 arr.resize(4, refcheck=False)
                 point = arr + base_point
             elif isinstance(res, numbers.Number):
                 point = [points[i], res, 0, 1]
             else:
-                raise Exception(f'Plot function {func.__name__} codomain should be 1D < 3 array of numbers (or plain number), given: {res}')
+                raise Exception(
+                    f"Plot function {func.__name__} codomain should be 1D < 3 array of numbers (or plain number), given: {res}"
+                )
             self.data.append(point)
 
         self.data = Matrix(self.data)
 
 
 class Sphere(Plot):
+    """ """
 
     @classmethod
     def _fn(cls, phi, theta):
+        """
 
+        :param phi:
+        :param theta:
+
+        """
         return [
             math.sin(phi * math.pi / 180) * math.cos(theta * math.pi / 180),
             math.sin(theta * math.pi / 180) * math.sin(phi * math.pi / 180),
-            math.cos(phi * math.pi / 180)
+            math.cos(phi * math.pi / 180),
         ]
 
-    def __init__(self, scale=1, position=(0, 0, 0), color=white, shimmering=False, interpolate=100):
-
+    def __init__(
+            self,
+            scale=1,
+            position=(0, 0, 0),
+            color=white,
+            shimmering=False,
+            interpolate=100,
+    ):
         # self.data = []
         # for x in np.linspace(0, 360, 30):
         #     for y in np.linspace(0, 360, 30):
         #         self.data.append(Sphere._fn(x, y) + [1])
 
-        super(Sphere, self).__init__(func=Sphere._fn, interpolate=interpolate, allrange=[0, 360], position=position,
-                                     color=color, shimmering=shimmering, scale=scale)
+        super(Sphere, self).__init__(
+            func=Sphere._fn,
+            interpolate=interpolate,
+            allrange=[0, 360],
+            position=position,
+            color=color,
+            shimmering=shimmering,
+            scale=scale,
+        )
 
 
 class Trajectory:
+    """ """
 
     class ToAxis:
+        """ """
 
         @classmethod
         def X(cls, speed=0.01, **kwargs):
+            """
+
+            :param speed:  (Default value = 0.01)
+            :param **kwargs:
+
+            """
             return Trajectory(func=lambda x: [x, y, 0], speed=speed, **kwargs)
 
         @classmethod
         def Y(cls, speed=0.01, **kwargs):
+            """
+
+            :param speed:  (Default value = 0.01)
+            :param **kwargs:
+
+            """
             return Trajectory(func=lambda y: [0, y, 0], speed=speed, **kwargs)
 
         @classmethod
         def Z(cls, speed=0.01, **kwargs):
+            """
+
+            :param speed:  (Default value = 0.01)
+            :param **kwargs:
+
+            """
             return Trajectory(func=lambda z: [0, 0, z], speed=speed, **kwargs)
 
     @classmethod
-    def Around(cls, around: Model, func, speed=0.01,  **kwargs):
+    def Around(cls, around: Model, func, speed=0.01, **kwargs):
+        """
+
+        :param around: Model:
+        :param func:
+        :param speed:  (Default value = 0.01)
+        :param **kwargs:
+
+        """
         return Trajectory(around=around, func=func, speed=speed, **kwargs)
 
     @classmethod
     def SineXY(cls, speed=0.01, **kwargs):
+        """
+
+        :param speed:  (Default value = 0.01)
+        :param **kwargs:
+
+        """
         return Trajectory(lambda x: [x, math.sin(x)], speed=speed, **kwargs)
 
     @classmethod
     def CosXY(cls, speed=0.01, **kwargs):
+        """
+
+        :param speed:  (Default value = 0.01)
+        :param **kwargs:
+
+        """
         return Trajectory(lambda x: [x, math.cos(x)], speed=speed, **kwargs)
 
     @classmethod
     def SineXYZ(cls, speed=0.01, **kwargs):
-        return Trajectory(lambda x: [x, math.sin(x), -x], speed=speed, **kwargs)
+        """
+
+        :param speed:  (Default value = 0.01)
+        :param **kwargs:
+
+        """
+        return Trajectory(lambda x: [x, math.sin(x), -x],
+                          speed=speed,
+                          **kwargs)
 
     @classmethod
     def CosXYZ(cls, speed=0.01, **kwargs):
-        return Trajectory(lambda x: [x, math.cos(x), -x], speed=speed, **kwargs)
+        """
 
-    def __init__(self, func, speed=0.2, around: Model = None, start_position=(0, 0, 0)):
+        :param speed:  (Default value = 0.01)
+        :param **kwargs:
 
+        """
+        return Trajectory(lambda x: [x, math.cos(x), -x],
+                          speed=speed,
+                          **kwargs)
+
+    def __init__(self,
+                 func,
+                 speed=0.2,
+                 around: Model = None,
+                 start_position=(0, 0, 0)):
         if not callable(func):
-            raise Exception(f'func argument should be callable, given: {func}')
+            raise Exception(f"func argument should be callable, given: {func}")
 
         self.iteration = 0
         # step
         self.speed = speed
         self.x = 0
         self.attached_model = around
-        self.start_position = self.attached_model.position()[:-1] if self.attached_model else start_position
+        self.start_position = (self.attached_model.position()[:-1]
+                               if self.attached_model else start_position)
         self.position = [0, 0, 0, 1]
         # dx dy dz
         self.dPosition = None
@@ -507,7 +660,8 @@ class Trajectory:
         self.signature = signature(func)
 
         if len(self.signature.parameters) != 1:
-            raise Exception('Continuous Trajectory function can have only one parameter')
+            raise Exception(
+                "Continuous Trajectory function can have only one parameter")
 
         # if we attached - we want to preserve function center context,
         # so first calibration jump is required to assume that 0.0.0 is the object center
@@ -518,6 +672,7 @@ class Trajectory:
             self.position = self.next_value()
 
     def next_value(self):
+        """ """
         result = self.func(self.x)
 
         if isinstance(result, (list, Iterable)):
@@ -525,7 +680,7 @@ class Trajectory:
             arr = numpy.array(result)
             if arr.ndim != 1 or arr.shape[0] > 3:
                 raise Exception(
-                    f'Plot function {self.func.__name__} codomain should be 1D < 3 array of numbers (or plain number)'
+                    f"Plot function {self.func.__name__} codomain should be 1D < 3 array of numbers (or plain number)"
                 )
             arr.resize(4, refcheck=False)
             point = arr + [0, 0, 0, 1]
@@ -533,7 +688,7 @@ class Trajectory:
             point = numpy.array([self.x, result, 0, 1])
         else:
             raise Exception(
-                f'Plot function {self.func.__name__} codomain should be 1D < 3 array of numbers (or plain number), given: {result}'
+                f"Plot function {self.func.__name__} codomain should be 1D < 3 array of numbers (or plain number), given: {result}"
             )
 
         self.x = self.x + self.speed
@@ -541,7 +696,7 @@ class Trajectory:
         return point
 
     def move(self):
-
+        """ """
         point = self.next_value()
         # in dPosition w goes to zero, no affect for dx dy dz
         self.dPosition = point - self.position
@@ -549,7 +704,8 @@ class Trajectory:
 
         if self.attached_model:
             if self.attached_model.trajectory:
-                self.dPosition = self.attached_model.trajectory.dPosition + self.dPosition
+                self.dPosition = (self.attached_model.trajectory.dPosition +
+                                  self.dPosition)
 
         # we need dx dy dz to define next move
 
@@ -563,10 +719,15 @@ class Trajectory:
         return self.move()
 
     def attach(self, model):
+        """
 
+        :param model:
+
+        """
         self.attached_model = model
         self.start_position = model.position()[:-1]
 
     def backwards(self):
+        """ """
         self.speed = -self.speed
         return self
