@@ -7,6 +7,7 @@ if sys.version_info >= (3, 10):
     from collections.abc import Iterable
 else:
     from collections import Iterable
+
 from inspect import signature
 
 import numpy
@@ -14,7 +15,6 @@ import numpy as np
 
 from . import three_d
 from .matrix import Matrix
-
 
 x = 0
 y = 1
