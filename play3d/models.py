@@ -58,7 +58,8 @@ class Model:
                 data.append(v)
 
             if l.startswith("f "):
-                v = list(map(lambda face: int(face.split("/")[0]), l[2:].split()))
+                v = list(
+                    map(lambda face: int(face.split("/")[0]), l[2:].split()))
 
                 faces.append(v)
 
@@ -85,18 +86,15 @@ class Model:
         :param faces:
         :param kwargs: 'rasterize' - True or False
         """
-        self.matrix = Matrix(
-            [
-                [1 * scale, 0, 0, 0],
-                [0, 1 * scale, 0, 0],
-                [0, 0, 1 * scale, 0],
-                [*position, 1],
-            ]
-        )
+        self.matrix = Matrix([
+            [1 * scale, 0, 0, 0],
+            [0, 1 * scale, 0, 0],
+            [0, 0, 1 * scale, 0],
+            [*position, 1],
+        ])
         self.faces = self.__class__.faces
-        self.data = (
-            Matrix(self.__class__.data.matrix.copy()) if self.__class__.data else None
-        )
+        self.data = (Matrix(self.__class__.data.matrix.copy())
+                     if self.__class__.data else None)
 
         # defines continuous translation/route by given trajectory function
         self.trajectory = None
@@ -162,8 +160,8 @@ class Model:
 
         """
         points = numpy.delete(
-            points, numpy.where(points[:, 3] < three_d.Camera.near)[0], 0
-        )
+            points,
+            numpy.where(points[:, 3] < three_d.Camera.near)[0], 0)
 
         for pos in points:
             three_d.Device.put_pixel(pos[x], pos[y], self.color)
@@ -176,7 +174,8 @@ class Model:
         :param angle_z:  (Default value = 0)
 
         """
-        self.matrix = three_d.rotate_model(self.matrix, angle_x, angle_y, angle_z)
+        self.matrix = three_d.rotate_model(self.matrix, angle_x, angle_y,
+                                           angle_z)
         return self
 
     def position(self):
@@ -214,7 +213,8 @@ class Model:
         :param length:  (Default value = None)
 
         """
-        self.trajectory_path = Model(data=numpy.ndarray([1, 4], "float32"), color=blue)
+        self.trajectory_path = Model(data=numpy.ndarray([1, 4], "float32"),
+                                     color=blue)
         self.trace = True
 
     def _trace(self, length=None):
@@ -226,8 +226,7 @@ class Model:
 
         new_track_point = self.position()
         self.trajectory_path.data.matrix = numpy.vstack(
-            [self.trajectory_path.data, new_track_point]
-        )
+            [self.trajectory_path.data, new_track_point])
         self.trajectory_path.draw()
 
     def _shimmer(self):
@@ -258,28 +257,21 @@ class Model:
             for i in range(3):
                 start, end = face[i], face[(i + 1) % 3]
                 # todo camera near numpy before
-                if (
-                    points[start][w] <= three_d.Camera.near
-                    and points[end][w] <= three_d.Camera.near
-                ):
+                if (points[start][w] <= three_d.Camera.near
+                        and points[end][w] <= three_d.Camera.near):
                     continue
 
-                if (
-                    points[start][w] < three_d.Camera.near
-                    or points[end][w] < three_d.Camera.near
-                ):
+                if (points[start][w] < three_d.Camera.near
+                        or points[end][w] < three_d.Camera.near):
                     # direction > 0 means first point of line is ahead of us. so we cut from second point
                     pc, direction = three_d.linemidpoint(
-                        points[start], points[end], three_d.Camera.near
-                    )
+                        points[start], points[end], three_d.Camera.near)
                     # points[end if points[end][w] < Camera.near else start] = pc
                     # fixme: proper midline separation
                     points_copy[end] = pc
-                    points_copy[start] = (
-                        points[start]
-                        if points[start][w] > three_d.Camera.near
-                        else points[end]
-                    )
+                    points_copy[start] = (points[start] if points[start][w]
+                                          > three_d.Camera.near else
+                                          points[end])
                     # three_d.Device.drawline(points[start] if points[start][w] > Camera.near else points[end], pc, self.color)
                 # else:
                 three_d.Device.drawline(points[start], points[end], self.color)
@@ -297,17 +289,14 @@ class Model:
             color = 140 + (i % 110)
 
             if self.rasterize:
-                three_d.fill_triangle(
-                    A[face[0]], A[face[1]], A[face[2]], (color, color, color)
-                )
+                three_d.fill_triangle(A[face[0]], A[face[1]], A[face[2]],
+                                      (color, color, color))
             else:
                 for i in range(3):
                     start, end = face[i], face[(i + 1) % 3]
 
-                    if not (
-                        A[start][w] <= three_d.Camera.near
-                        and A[end][w] <= three_d.Camera.near
-                    ):  # \
+                    if not (A[start][w] <= three_d.Camera.near
+                            and A[end][w] <= three_d.Camera.near):  # \
                         # and 0 < A[start][x] < three_d.Device._width and 0 < A[start][y] < three_d.Device._height\
                         # and 0 < A[end][x] < three_d.Device._width and 0 < A[end][y] < three_d.Device._height:
 
@@ -353,6 +342,7 @@ class Model:
 
 class Grid(Model):
     """ """
+
     def __init__(self, dot_precision=100, dimensions=(10, 10), **kwargs):
         super(Grid, self).__init__(**kwargs)
 
@@ -367,22 +357,23 @@ class Grid(Model):
         # ])
         self.data = Matrix([])
         for x in range(grid_dimension[0]):
-            line_dots = three_d.dotted_line(
-                (x, 0, 0, 1), (x, 0, grid_dimension[1], 1), precision=dot_precision
-            )
+            line_dots = three_d.dotted_line((x, 0, 0, 1),
+                                            (x, 0, grid_dimension[1], 1),
+                                            precision=dot_precision)
 
-            self.data.matrix = numpy.array(list(self.data.matrix) + list(line_dots))
+            self.data.matrix = numpy.array(
+                list(self.data.matrix) + list(line_dots))
 
         for z in range(grid_dimension[1]):
-            line_dots = three_d.dotted_line(
-                (0, 0, z, 1), (grid_dimension[0], 0, z, 1), precision=dot_precision
-            )
-            self.data.matrix = numpy.array(list(self.data.matrix) + list(line_dots))
+            line_dots = three_d.dotted_line((0, 0, z, 1),
+                                            (grid_dimension[0], 0, z, 1),
+                                            precision=dot_precision)
+            self.data.matrix = numpy.array(
+                list(self.data.matrix) + list(line_dots))
         # self.data = grid_vertices
 
         self.matrix = self.matrix @ three_d.translate(
-            -grid_dimension[0] / 2, 0, -grid_dimension[1] / 2
-        )
+            -grid_dimension[0] / 2, 0, -grid_dimension[1] / 2)
 
     def render(self):
         """ """
@@ -391,18 +382,16 @@ class Grid(Model):
 
 class Cube(Model):
     """ """
-    data = Matrix(
-        [
-            [-1, 1, 1, 1],
-            [1, 1, 1, 1],
-            [-1, -1, 1, 1],
-            [1, -1, 1, 1],
-            [-1, 1, -1, 1],
-            [1, 1, -1, 1],
-            [1, -1, -1, 1],
-            [-1, -1, -1, 1],
-        ]
-    )
+    data = Matrix([
+        [-1, 1, 1, 1],
+        [1, 1, 1, 1],
+        [-1, -1, 1, 1],
+        [1, -1, 1, 1],
+        [-1, 1, -1, 1],
+        [1, 1, -1, 1],
+        [1, -1, -1, 1],
+        [-1, -1, -1, 1],
+    ])
 
     # ! respect to order above
     faces = [
@@ -419,6 +408,7 @@ class Cube(Model):
         [4, 5, 6],
         [4, 6, 7],
     ]
+
     #
 
     def __init__(self, **kwargs):
@@ -427,6 +417,7 @@ class Cube(Model):
 
 class CircleChain(Model):
     """ """
+
     def __init__(self, **kwargs):
         super(CircleChain, self).__init__(**kwargs)
 
@@ -434,22 +425,18 @@ class CircleChain(Model):
 
         full_cycle = 360
         for degree in range(full_cycle):
-            self.data.append(
-                [
-                    math.sin(degree * 2 * math.pi / 360),
-                    math.cos(degree * 2 * math.pi / 360),
-                    0,
-                    1,
-                ]
-            )
-            self.data.append(
-                [
-                    0,
-                    math.sin(degree * 2 * math.pi / 360),
-                    math.cos(degree * 2 * math.pi / 360),
-                    1,
-                ]
-            )
+            self.data.append([
+                math.sin(degree * 2 * math.pi / 360),
+                math.cos(degree * 2 * math.pi / 360),
+                0,
+                1,
+            ])
+            self.data.append([
+                0,
+                math.sin(degree * 2 * math.pi / 360),
+                math.cos(degree * 2 * math.pi / 360),
+                1,
+            ])
 
         self.data = Matrix(self.data)
 
@@ -519,6 +506,7 @@ class Plot(Model):
 
 class Sphere(Plot):
     """ """
+
     @classmethod
     def _fn(cls, phi, theta):
         """
@@ -534,12 +522,12 @@ class Sphere(Plot):
         ]
 
     def __init__(
-        self,
-        scale=1,
-        position=(0, 0, 0),
-        color=white,
-        shimmering=False,
-        interpolate=100,
+            self,
+            scale=1,
+            position=(0, 0, 0),
+            color=white,
+            shimmering=False,
+            interpolate=100,
     ):
         # self.data = []
         # for x in np.linspace(0, 360, 30):
@@ -559,8 +547,10 @@ class Sphere(Plot):
 
 class Trajectory:
     """ """
+
     class ToAxis:
         """ """
+
         @classmethod
         def X(cls, speed=0.01, **kwargs):
             """
@@ -631,7 +621,9 @@ class Trajectory:
         :param **kwargs:
 
         """
-        return Trajectory(lambda x: [x, math.sin(x), -x], speed=speed, **kwargs)
+        return Trajectory(lambda x: [x, math.sin(x), -x],
+                          speed=speed,
+                          **kwargs)
 
     @classmethod
     def CosXYZ(cls, speed=0.01, **kwargs):
@@ -641,9 +633,15 @@ class Trajectory:
         :param **kwargs:
 
         """
-        return Trajectory(lambda x: [x, math.cos(x), -x], speed=speed, **kwargs)
+        return Trajectory(lambda x: [x, math.cos(x), -x],
+                          speed=speed,
+                          **kwargs)
 
-    def __init__(self, func, speed=0.2, around: Model = None, start_position=(0, 0, 0)):
+    def __init__(self,
+                 func,
+                 speed=0.2,
+                 around: Model = None,
+                 start_position=(0, 0, 0)):
         if not callable(func):
             raise Exception(f"func argument should be callable, given: {func}")
 
@@ -652,11 +650,8 @@ class Trajectory:
         self.speed = speed
         self.x = 0
         self.attached_model = around
-        self.start_position = (
-            self.attached_model.position()[:-1]
-            if self.attached_model
-            else start_position
-        )
+        self.start_position = (self.attached_model.position()[:-1]
+                               if self.attached_model else start_position)
         self.position = [0, 0, 0, 1]
         # dx dy dz
         self.dPosition = None
@@ -666,8 +661,7 @@ class Trajectory:
 
         if len(self.signature.parameters) != 1:
             raise Exception(
-                "Continuous Trajectory function can have only one parameter"
-            )
+                "Continuous Trajectory function can have only one parameter")
 
         # if we attached - we want to preserve function center context,
         # so first calibration jump is required to assume that 0.0.0 is the object center
@@ -710,9 +704,8 @@ class Trajectory:
 
         if self.attached_model:
             if self.attached_model.trajectory:
-                self.dPosition = (
-                    self.attached_model.trajectory.dPosition + self.dPosition
-                )
+                self.dPosition = (self.attached_model.trajectory.dPosition +
+                                  self.dPosition)
 
         # we need dx dy dz to define next move
 
